@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: comparusTestWork
+  config:
+    import: classpath:datasources.yml
+logging:
+  level:
+    com.example.comparustestwork: DEBUG
+    com.zaxxer.hikari: INFO
+server:
+  port: 9090

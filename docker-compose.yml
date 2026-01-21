@@ -1,0 +1,101 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: demo-postgres
+    environment:
+      POSTGRES_DB: testdb
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d testdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - ./init/postgres:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data
+
+  mysql:
+    image: mysql:8
+    container_name: demo-mysql
+    environment:
+      MYSQL_DATABASE: testdb
+      MYSQL_USER: testuser
+      MYSQL_PASSWORD: testpass
+      MYSQL_ROOT_PASSWORD: rootpass
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "testuser", "-ptestpass"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - ./init/mysql:/docker-entrypoint-initdb.d
+      - mysql_data:/var/lib/mysql
+
+  mariadb:
+    image: mariadb:11
+    container_name: demo-mariadb
+    environment:
+      MARIADB_DATABASE: testdb
+      MARIADB_USER: testuser
+      MARIADB_PASSWORD: testpass
+      MARIADB_ROOT_PASSWORD: rootpass
+    ports:
+      - "3307:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - ./init/mariadb:/docker-entrypoint-initdb.d
+      - mariadb_data:/var/lib/mysql
+
+  oracle:
+    image: gvenzl/oracle-xe:21-slim
+    container_name: demo-oracle
+    environment:
+      ORACLE_PASSWORD: testpass
+      APP_USER: testuser
+      APP_USER_PASSWORD: testpass
+    ports:
+      - "1521:1521"
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    volumes:
+      - ./init/oracle:/docker-entrypoint-initdb.d
+      - oracle_data:/opt/oracle/oradata
+  app:
+    build: .
+    container_name: comparusTestWork
+    ports:
+      - "9090:9090"
+    environment:
+      POSTGRES_URL: jdbc:postgresql://postgres:5432/testdb
+      MYSQL_URL: jdbc:mysql://mysql:3306/testdb
+      MARIADB_URL: jdbc:mariadb://mariadb:3306/testdb
+      ORACLE_URL: jdbc:oracle:thin:@oracle:1521/XEPDB1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+      oracle:
+        condition: service_healthy
+volumes:
+  postgres_data:
+  mysql_data:
+  mariadb_data:
+  oracle_data:
