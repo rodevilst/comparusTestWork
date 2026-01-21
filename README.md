@@ -2,14 +2,9 @@
 
 ## Running the Application
 
-1. Start the databases:
+1. Start the databases and application:
 ```
    docker-compose up -d
-```
-
-2. Run the application:
-```
-   ./mvnw spring-boot:run
 ```
 
 ## API
